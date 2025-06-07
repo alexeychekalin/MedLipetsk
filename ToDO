@@ -1,0 +1,25 @@
+!!!- Lara + postman | php artisan make:model Department -m
+!!!- Lara + postman | php artisan make:model Specialization -m
+!!!- Lara + postman | php artisan make:model PaymentPurpose -m
+!!!- Lara + postman | php artisan make:model PricelistItems -m
+!!!- Lara + postman | php artisan make:model PricelistItemsSnapshot -m
+!!!- Lara + postman | php artisan make:model Passports -m
+!!!- Lara + postman | php artisan make:model Users -m
+!!!- Lara + postman | php artisan make:model AccessLevel -m
+!!!- Lara + postman | php artisan make:model UsersAccessLevel -m
+!!!- Lara + postman | php artisan make:model Patients -m
+!!!- Lara + postman | php artisan make:model Receipts -m
+!!!- Lara + postman | php artisan make:model TreatmentPlans -m
+!!!- Lara + postman | php artisan make:model Doctors -m
+!!!- Lara + postman | php artisan make:model Salaries -m
+!!!- Lara + postman | php artisan make:model SalariesSnapshot -m
+!!!- Lara + postman | php artisan make:model DoctorSchedule -m
+!!!- Lara + postman | php artisan make:model PatientAppointment -m
+!!!- Lara + postman | php artisan make:model Payment -m
+!!!- Lara + postman WITHOUT DEL^PATCH^PUT | php artisan make:model DoctorsPricelistItem -m
+!!!- Lara + postman WITHOUT DEL^PATCH^PUT | php artisan make:model DoctorsSpecialization -m
+!!!- Lara + postman WITHOUT DEL^PATCH^PUT | php artisan make:model PricelistItemsTreatmentPlan -m
+!!!- Lara + postman | php artisan make:model MedicalService -m
+!!!- Lara + postman | php artisan make:model CheckTemplate -m
+!!!- Lara + postman | php artisan make:model Note -m
+!!!- Lara + postman | php artisan make:model Report -m
