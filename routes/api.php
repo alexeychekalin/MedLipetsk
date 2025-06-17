@@ -90,9 +90,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::delete('/doctor/{doctor_id}', [DoctorController::class, 'deleteDoctor']);
     Route::get('/doctor/transactions/{id}', [DoctorController::class, 'paymentsDoctor']);
 
-
-
     Route::post('/patient/', [PatientController::class, 'createPatient']);
+    Route::get('/patient/find', [PatientController::class, 'findPatient']);
     Route::put('/patient/{patient}', [PatientController::class, 'updatePatient']);
     Route::get('/patient/', [PatientController::class, 'getPatient']);
     Route::get('/patient/{patient_id}', [PatientController::class, 'getOnePatient'])->where('patient_id', '[0-9a-fA-F-]{36}');

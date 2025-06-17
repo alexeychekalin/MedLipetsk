@@ -90,4 +90,30 @@ class PatientController extends Controller
         $payments = Payments::where('patient_id', $id)->get();
         return PaymentsResource::collection($payments);
     }
+
+    public function findPatient(Request $request)
+    {
+        $query = $request->input('search');
+        if (!$query) {
+            return response()->json([]);
+        }
+        $patients = Patients::where(function($q) use ($query) {
+            $q->where('second_name', 'ilike', '%' . $query . '%')
+                ->orWhere('first_name', 'ilike', '%' . $query . '%')
+                ->orWhere('patronymic_name', 'ilike', '%' . $query . '%')
+                ->orWhere('phone_number', 'ilike', '%' . $query . '%');
+        })->get();
+
+        $data = $patients->map(function($patients) {
+            return [
+                'id' => $patients->id,
+                'second_name' => $patients->second_name,
+                'first_name' => $patients->first_name,
+                'patronymic_name' => $patients->patronymic_name,
+                'phone_number' => $patients->phone_number,
+            ];
+        });
+
+        return response()->json($data);
+    }
 }

@@ -1,5 +1,12 @@
 <?php
-
+/*
+ * CREATE INDEXED IN DB
+     CREATE INDEX patients_second_name_trgm_idx ON patients USING gin (second_name gin_trgm_ops);
+     CREATE INDEX patients_first_name_trgm_idx ON patients USING gin (first_name gin_trgm_ops);
+     CREATE INDEX patients_patronymic_name_trgm_idx ON patients USING gin (patronymic_name gin_trgm_ops);
+     CREATE INDEX patients_phone_number_trgm_idx ON patients USING gin (phone_number gin_trgm_ops);
+ *
+ * */
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
