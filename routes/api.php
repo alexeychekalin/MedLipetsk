@@ -83,16 +83,19 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::put('/schedule/note/appointment', [ScheduleController::class, 'updateNoteAppointment']);
 
     Route::post('/doctor/', [DoctorController::class, 'createDoctor']);
+    Route::get('/doctor/find', [DoctorController::class, 'findDoctor']);
     Route::put('/doctor/{doctor}', [DoctorController::class, 'updateDoctor']);
     Route::get('/doctor/', [DoctorController::class, 'getDoctor']);
-    Route::get('/doctor/{doctor_id}', [DoctorController::class, 'getOneDoctor']);
+    Route::get('/doctor/{doctor_id}', [DoctorController::class, 'getOneDoctor'])->where('doctor_id', '[0-9a-fA-F-]{36}');;
     Route::delete('/doctor/{doctor_id}', [DoctorController::class, 'deleteDoctor']);
     Route::get('/doctor/transactions/{id}', [DoctorController::class, 'paymentsDoctor']);
+
+
 
     Route::post('/patient/', [PatientController::class, 'createPatient']);
     Route::put('/patient/{patient}', [PatientController::class, 'updatePatient']);
     Route::get('/patient/', [PatientController::class, 'getPatient']);
-    Route::get('/patient/{patient_id}', [PatientController::class, 'getOnePatient'])->where('patient_id', '[0-9a-fA-F-]{36}');;
+    Route::get('/patient/{patient_id}', [PatientController::class, 'getOnePatient'])->where('patient_id', '[0-9a-fA-F-]{36}');
     Route::delete('/patient/{patient_id}', [PatientController::class, 'deletePatient']);
     Route::get('/patient/last', [PatientController::class, 'lastPatient']);
     Route::get('/patient/plan', [PatientController::class, 'planPatient']);

@@ -10,10 +10,10 @@ class CreatePatientsTable extends Migration
     {
         Schema::create('patients', function (Blueprint $table) {
             $table->uuid('id')->primary()->comment('Уникальный идентификатор пациента');
-            $table->string('second_name')->nullable()->comment('Фамилия (зашифровано)');
-            $table->string('first_name')->nullable()->comment('Имя (зашифровано)');
-            $table->string('patronymic_name')->nullable()->comment('Отчество (зашифровано)');
-            $table->string('phone_number')->nullable()->comment('Телефон (зашифровано)');
+            $table->string('second_name')->nullable()->comment('Фамилия (НЕ зашифровано)');
+            $table->string('first_name')->nullable()->comment('Имя (НЕ зашифровано)');
+            $table->string('patronymic_name')->nullable()->comment('Отчество (НЕ зашифровано)');
+            $table->string('phone_number')->nullable()->comment('Телефон (НЕ зашифровано)');
             $table->float('balance')->notNullable()->default(0);
             $table->uuid('passport')->nullable()->comment('Ссылка на паспорт');
             $table->text('info')->nullable()->comment('Дополнительная информация');

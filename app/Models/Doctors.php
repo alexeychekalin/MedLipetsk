@@ -32,6 +32,7 @@ class Doctors extends Model
         'rating',
     ];
 
+    /*
     // Шифрование полей
     public function getSecondNameAttribute($value)
     {
@@ -77,7 +78,7 @@ class Doctors extends Model
     {
         $this->attributes['info'] = $value !== null ? Crypt::encryptString($value) : null;
     }
-/*
+
     public function getImageAttribute($value)
     {
         return $value !== null ? Crypt::decryptString($value) : null;

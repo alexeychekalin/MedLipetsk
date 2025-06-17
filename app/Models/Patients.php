@@ -25,6 +25,7 @@ class Patients extends Model
         'image'
     ];
 
+    /*
     // Геттеры и мутаторы для зашифрованных полей
     public function getSecondNameAttribute($value)
     {
@@ -70,4 +71,5 @@ class Patients extends Model
     {
         $this->attributes['image'] = $value !== null ? Crypt::encryptString($value) : null;
     }
+    */
 }

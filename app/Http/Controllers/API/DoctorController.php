@@ -50,4 +50,30 @@ class DoctorController extends Controller
         $payments = Payments::where('doctor_id', $id)->get();
         return PaymentsResource::collection($payments);
     }
+
+    public function findDoctor(Request $request)
+    {
+        $query = $request->input('search');
+        if (!$query) {
+            return response()->json([]);
+        }
+        $doctors = \App\Models\Doctors::where(function($q) use ($query) {
+            $q->where('second_name', 'ilike', '%' . $query . '%')
+                ->orWhere('first_name', 'ilike', '%' . $query . '%')
+                ->orWhere('patronymic_name', 'ilike', '%' . $query . '%')
+                ->orWhere('phone_number', 'ilike', '%' . $query . '%');
+        })->get();
+
+        $data = $doctors->map(function($doctor) {
+            return [
+                'id' => $doctor->id,
+                'second_name' => $doctor->second_name,
+                'first_name' => $doctor->first_name,
+                'patronymic_name' => $doctor->patronymic_name,
+                'phone_number' => $doctor->phone_number,
+            ];
+        });
+
+        return response()->json($data);
+    }
 }

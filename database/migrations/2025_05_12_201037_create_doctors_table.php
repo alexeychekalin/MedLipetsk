@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * CREATE INDEXEX IN DB
+ *
+    CREATE INDEX doctor_second_name_trgm_idx ON doctors USING gin (second_name gin_trgm_ops);
+    CREATE INDEX doctor_first_name_trgm_idx ON doctors USING gin (first_name gin_trgm_ops);
+    CREATE INDEX doctor_patronymic_name_trgm_idx ON doctors USING gin (patronymic_name gin_trgm_ops);
+    CREATE INDEX doctor_phone_number_trgm_idx ON doctors USING gin (phone_number gin_trgm_ops);
+ *
+ * */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,10 +20,10 @@ class CreateDoctorsTable extends Migration
     {
         Schema::create('doctors', function (Blueprint $table) {
             $table->uuid('id')->primary()->comment('Уникальный идентификатор врача');
-            $table->string('second_name')->nullable()->comment('Фамилия (зашифровано)');
-            $table->string('first_name')->nullable()->comment('Имя (зашифровано)');
-            $table->string('patronymic_name')->nullable()->comment('Отчество (зашифровано)');
-            $table->string('phone_number')->unique()->notNullable()->comment('Телефон (зашифровано)');
+            $table->string('second_name')->nullable()->comment('Фамилия (НЕ зашифровано)');
+            $table->string('first_name')->nullable()->comment('Имя (НЕ зашифровано)');
+            $table->string('patronymic_name')->nullable()->comment('Отчество (НЕ зашифровано)');
+            $table->string('phone_number')->unique()->notNullable()->comment('Телефон (НЕ зашифровано)');
             $table->date('birth_date')->notNullable()->comment('Дата рождения');
             $table->unsignedBigInteger('department')->nullable()->comment('Отделение');
             $table->foreign('department')->references('id')->on('dict_departments')->onDelete('set null');
