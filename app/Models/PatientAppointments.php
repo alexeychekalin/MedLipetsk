@@ -42,4 +42,24 @@ class PatientAppointments extends Model
     {
         return $this->belongsTo(Receipts::class, 'receipt_id');
     }
+    public function getRegistrationDateAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
+    public function getScheduledTimeAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
 }

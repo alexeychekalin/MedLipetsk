@@ -29,4 +29,24 @@ class PricelistItemSnapshot extends Model
     {
         return $this->belongsTo(\App\Models\PricelistItem::class, 'id_pricelist_item');
     }
+    public function getDateStartAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
+    public function getDateFinishAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
 }

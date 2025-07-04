@@ -36,4 +36,14 @@ class Payments extends Model
     {
         return $this->belongsTo(\App\Models\Patients::class, 'patients');
     }
+    public function getDateAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
 }

@@ -142,4 +142,9 @@ class ReportController extends Controller
 
         return response()->json($result);
     }
+
+    public function makePayMethodPatient(Request $request)
+    {
+
+    }
 }

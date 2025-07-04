@@ -58,4 +58,25 @@ class MedicalServices extends Model
     {
         $this->attributes['conclusion'] = Crypt::encryptString($value);
     }
+
+    public function getCreatedAtAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
+    public function getDateAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
 }

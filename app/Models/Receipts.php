@@ -20,4 +20,15 @@ class Receipts extends Model
         'discount',
         'created_at',
     ];
+
+    public function getCreatedAtAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
 }

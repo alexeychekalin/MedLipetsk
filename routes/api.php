@@ -111,6 +111,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/report/day', [ReportController::class, 'getReports']);
     Route::get('/report/period', [ReportController::class, 'getReportsPeriod']);
     Route::patch('/report/payment/update', [ReportController::class, 'changePayMethod']);
+    Route::patch('/report/payment/make/medical/{patient_id}', [ReportController::class, 'makePayMethodPatient']);
 
     Route::post('/pricelistitem', [\App\Http\Controllers\API\PriceListItemController::class, 'createPLI']);
     Route::put('/pricelistitem/{pli}', [\App\Http\Controllers\API\PriceListItemController::class, 'updatePLI']);

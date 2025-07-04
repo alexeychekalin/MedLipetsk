@@ -31,6 +31,16 @@ class Doctors extends Model
         'as_patient',
         'rating',
     ];
+    public function getCreatedAtAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
 
     /*
     // Шифрование полей

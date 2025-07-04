@@ -25,6 +25,17 @@ class Patients extends Model
         'image'
     ];
 
+    public function getCreatedAtAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        // преобразуем строку в Carbon, устанавливаем таймзону и форматируем
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
+
     /*
     // Геттеры и мутаторы для зашифрованных полей
     public function getSecondNameAttribute($value)
