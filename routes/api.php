@@ -107,7 +107,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     Route::post('/report', [ReportController::class, 'createReport']);
     // Route::post('/report', [ReportController::class, 'createPaymentToReport']);
-    Route::delete('/report/payment/cancel/{payment_id}', [ReportController::class, 'deletePayment']);
+    Route::delete('/report/payment/cancel/{payment_id}', [ReportController::class, 'cancelPayment']);
     Route::get('/report/day', [ReportController::class, 'getReports']);
     Route::get('/report/period', [ReportController::class, 'getReportsPeriod']);
     Route::patch('/report/payment/update', [ReportController::class, 'changePayMethod']);

@@ -42,6 +42,83 @@ class ReportController extends Controller
         */
     }
 
+    public function cancelPayment($payment_id)
+    {
+        $payment = Payments::find($payment_id);
+        if (!$payment) response()->json(['error' => 'Платеж не найден'], 404);
+
+        $paymentDate = Carbon::parse($payment->date)->toDateString();
+        $report = Report::where('date_cash', $paymentDate)->first();
+        if (!$report) {
+            return response()->json(['error' => 'Отчет не найден'], 404);
+        }
+
+        $payment = Payments::findOrFail($payment_id);
+
+        $totalAmount = 0;
+        foreach ($payment->methods as $method) {
+            if (isset($method['value'])) {
+                $totalAmount += floatval($method['value']);
+            }
+        }
+        $receipt = Receipts::findOrFail($payment->receipt_id);
+        if (!$receipt) {
+            return response()->json(['error' => 'Связанный чек не найден'], 404);
+        }
+        $totalPrice = $receipt->total_amount - $receipt->discount;
+        if($totalAmount-$totalPrice != 0){
+            $patient = Patients::findOrFail($receipt->patient_id);
+            $patient->updateBalance(increment: -($totalAmount-$totalPrice));
+        }
+        $payment->patient_id = NULL;
+        $payment->save();
+
+        // Отменяем начисления врачам
+        $medical_services = MedicalServices::where('receipt_id', $payment->receipt_id)->get();
+        foreach ($medical_services as $medicalService) {
+            // agent
+            $price_list_item = PricelistItem::findOrFail($medicalService->pricelist_item_id);
+            if($price_list_item->fixedagentfee != NULL)
+                $agenfee = $price_list_item->fixedagentfee;
+            else
+                $agenfee = $price_list_item->pice*$medicalService->quantity*0.1;
+            // Обновляем баланс доктора
+            $doctor = Doctors::findOrFail($medicalService->agent_id);
+            $doctor->updateBalance(increment: -$agenfee);
+
+            $category = Department::findOrFail($price_list_item->department_id);
+            if($category->name != "Лабораторные исследования"){
+                // performer
+                if($price_list_item->fixedSalary != NULL)
+                    $agenfee = $price_list_item->fixedSalary;
+                else{
+                    $salaries = Salaries::where('doctor_id', $medicalService->performer_id)->first();
+                    $agenfee = $price_list_item->pice*$medicalService->quantity*$salaries->rate*0.1;
+                }
+                // Обновляем баланс доктора
+                $doctor = Doctors::findOrFail($medicalService->performer_id);
+                $doctor->updateBalance(increment: -$agenfee);
+            }
+        }
+        //переводим статус приемов в "Пришел"
+        $appoitmens = PatientAppointments::where('receipt_id', $payment->receipt_id)->get();
+        foreach ($appoitmens as $appoitmen) {
+            $appoitmen->status = "Пришел";
+            $appoitmen->save();
+        }
+        $payment->delete();
+
+        // Находим или создаем отчет за сегодня
+        $today = date('Y-m-d');
+        $report = Report::firstOrCreate(
+            ['date' => $today],
+            ['total_amount' => 0, 'startingCash' => 0]
+        );
+        $report->startingcash += -$totalAmount;
+        $report->save();
+        // Вернуть отчет за сегодня
+        return response()->json(new ReportResource($report));
+    }
     public function deletePayment($payment_id)
     {
         $payment = Payments::find($payment_id);
