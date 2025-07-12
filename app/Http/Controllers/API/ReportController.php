@@ -24,8 +24,51 @@ class ReportController extends Controller
 {
     public function createReport(Request $request)
     {
-        $dc = new ReportsController();
-        return $dc-> store($request);
+        //$dc = new ReportsController();
+        //return $dc-> store($request);
+        $validated = $request->validate([
+            'startingcash' => 'numeric',
+            'date_cash' => 'required|date|unique:report,date_cash',
+            'created_by' => 'nullable|exists:users,id',
+        ]);
+        $lastReport = Report::where('date', '<', $validated['date_cash'])->orderBy('date_cash', 'desc')->first();
+        $startingCash = $lastReport ? $lastReport->starting_cash : 0;
+
+        $report = Report::create([
+            'date_cash' => date('Y-m-d'),
+            'startingcash' => $startingCash,
+            'created_by' => $validated['created_by'] ?? null,
+        ]);
+
+        $purposeMedical = PaymentPurpose::where('name', 'Оплата услуг')->first();
+        $purposePayment = PaymentPurpose::where('name', 'Выплата')->first();
+        // $purposeBalance = PaymentPurpose::where('name', 'Списание с баланса')->first();
+
+        $totalAmount = 0;
+
+        foreach ($validated['payments'] as $payData) {
+            // Обработка purpose, например, вызов функции
+            foreach ($payData['methods'] as $method) {
+                if (isset($method['value'])) {
+                    $totalAmount += floatval($method['value']);
+                }
+            }
+            switch ($payData['purpose']) {
+                CASE $purposeMedical->id:
+                    $this->makeMedical($payData, $payData->patient_id);
+                    break;
+
+                CASE $purposePayment->id:
+                        $this->makePayout($payData, $payData->doctor_id);
+                        break;
+                }
+        }
+
+        $report->startingcash = $startingCash+$totalAmount;
+        $report->save();
+
+        // Вернуть отчет за сегодня
+        return response()->json(new ReportResource($report));
     }
 
     public function createPaymentToReport(Request $request)
@@ -119,6 +162,7 @@ class ReportController extends Controller
         // Вернуть отчет за сегодня
         return response()->json(new ReportResource($report));
     }
+
     public function deletePayment($payment_id)
     {
         $payment = Payments::find($payment_id);
