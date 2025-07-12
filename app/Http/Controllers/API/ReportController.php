@@ -392,4 +392,47 @@ class ReportController extends Controller
         // Вернуть отчет за сегодня
         return response()->json(new ReportResource($report));
     }
+
+    public function makePayment(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'purpose' => 'nullable|exists:dict_payment_purposes,id',
+            'details' => 'required|string',
+            'methods' => 'required|json',
+            'receipt_id' => 'nullable|uuid|exists:receipts,id',
+            'created_by' => 'nullable|uuid|exists:users,id',
+            'doctor_id' => 'nullable|uuid|exists:doctors,id',
+            'patient_id' => 'nullable|uuid|exists:patients,id',
+        ]);
+
+         $todayDate = date('Y-m-d'); // текущая дата в формате Y-m-d
+         $report = Report::where('date', $todayDate)->first();
+         if (!$report) {
+             return response()->json(['error' => 'Отчет за сегодня не найден'], 404);
+         }
+
+        $totalAmount = 0;
+        foreach ($validated['methods'] as $method) {
+            if (isset($method['value'])) {
+                $totalAmount += floatval($method['value']);
+            }
+        }
+
+        $report->startingcash += $totalAmount;
+        $report->save();
+
+        // Создаем платеж
+        $payment = Payments::create([
+            'date' => $validated['date'],
+            'purpose' => $validated['purpose'],
+            'details' => $validated['details'],
+            'methods' => $validated['methods'],
+            'doctor_id' => $validated['doctor_id'] ?? null,
+            'receipt_id' => $validated['receipt_id'] ?? null,
+            'created_by' => $validated['created_by'] ?? null,
+            'patient_id' => $validated['patient_id'] ?? null,
+        ]);
+        return response()->json(new ReportResource($report));
+    }
 }
