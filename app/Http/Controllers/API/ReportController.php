@@ -11,6 +11,7 @@ use App\Models\Doctors;
 use App\Models\MedicalServices;
 use App\Models\PatientAppointments;
 use App\Models\Patients;
+use App\Models\PaymentPurpose;
 use App\Models\Payments;
 use App\Models\PricelistItem;
 use App\Models\Receipts;
@@ -245,7 +246,7 @@ class ReportController extends Controller
             ['total_amount' => 0, 'startingCash' => 0]
         );
 
-        $report->startingсash += $totalAmount;
+        $report->startingcash += $totalAmount;
         $report->save();
 
         // Вернуть отчет за сегодня
@@ -254,9 +255,11 @@ class ReportController extends Controller
 
     public function updateBalanceWithoutRecord($patient_id, $increment, $request): void
     {
-       Payments::create([
+        $name = $increment < 0 ? 'Списание с баланса' : 'Пополнение баланса';
+        $purpose = PaymentPurpose::where('name', $name)->first();
+        Payments::create([
             'date' => $request['date'],
-            'purpose' => $request['purpose'],
+            'purpose' => $purpose->id,
             'details' => $request['details'],
             'methods' => "{\"cash\": $increment}",
             'patient_id' => $patient_id,
@@ -311,7 +314,7 @@ class ReportController extends Controller
             }
         }
 
-        $report->startingсash -= $totalAmount;
+        $report->startingcash -= $totalAmount;
         $report->save();
 
         // Обновляем баланс доктора
@@ -384,7 +387,7 @@ class ReportController extends Controller
             ['date' => $today],
             ['total_amount' => 0, 'startingCash' => 0]
         );
-        $report->startingсash += $totalAmount;
+        $report->startingcash += $totalAmount;
         $report->save();
         // Вернуть отчет за сегодня
         return response()->json(new ReportResource($report));
