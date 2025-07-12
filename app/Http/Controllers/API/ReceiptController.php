@@ -65,7 +65,9 @@ class ReceiptController extends Controller
                 'id' => $template->id,
                 'discount' => $template->discount ?? 0,
                 'total_amount' => $template->total_amount,
-                'created_at' => $template->created_at,
+                'created_at' => \Carbon\Carbon::parse($template->created_at)
+                    ->setTimezone('Europe/Moscow')
+                    ->toIso8601String(),
                 'medical_service' => $services,
             ];
         }

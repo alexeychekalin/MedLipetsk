@@ -36,6 +36,13 @@ class Patients extends Model
             ->toIso8601String();
     }
 
+    public function updateBalance($increment = 0)
+    {
+        $this->balance += $increment;
+        $this->save();
+        return $this;
+    }
+
     /*
     // Геттеры и мутаторы для зашифрованных полей
     public function getSecondNameAttribute($value)

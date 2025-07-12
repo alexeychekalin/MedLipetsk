@@ -42,6 +42,12 @@ class Doctors extends Model
             ->toIso8601String();
     }
 
+    public function updateBalance($increment = 0)
+    {
+        $this->balance += $increment;
+        $this->save();
+        return $this;
+    }
     /*
     // Шифрование полей
     public function getSecondNameAttribute($value)

@@ -5,8 +5,17 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ReportsController;
 use App\Http\Resources\PaymentsResource;
+use App\Http\Resources\ReportResource;
+use App\Models\Department;
+use App\Models\Doctors;
+use App\Models\MedicalServices;
+use App\Models\PatientAppointments;
+use App\Models\Patients;
 use App\Models\Payments;
+use App\Models\PricelistItem;
+use App\Models\Receipts;
 use App\Models\Report;
+use App\Models\Salaries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -49,7 +58,9 @@ class ReportController extends Controller
             ->get();
 
         $response = [
-            'date' => $report->date_cash,
+            'date' => \Carbon\Carbon::parse($report->date_cash)
+                ->setTimezone('Europe/Moscow')
+                ->toIso8601String(),
             'starting_cash' => $report->startingcash ?? 0,
             'payments' => PaymentsResource::collection($remainingPayments),
             //'closed' => false,
@@ -71,7 +82,9 @@ class ReportController extends Controller
             ->get();
 
         $response = [
-            'date' => $report->date_cash,
+            'date' => \Carbon\Carbon::parse($report->date_cash)
+                ->setTimezone('Europe/Moscow')
+                ->toIso8601String(),
             'starting_cash' => $report->startingcash ?? 0,
             'payments' => PaymentsResource::collection($remainingPayments),
             //'closed' => false,
@@ -102,7 +115,9 @@ class ReportController extends Controller
             ->get();
 
         $response = [
-            'date' => $report->date_cash,
+            'date' => \Carbon\Carbon::parse($report->date_cash)
+                ->setTimezone('Europe/Moscow')
+                ->toIso8601String(),
             'starting_cash' => $report->startingcash ?? 0,
             'payments' => PaymentsResource::collection($payments),
             //'closed' => false,
@@ -133,7 +148,9 @@ class ReportController extends Controller
                 ->get();
 
             $result[] = [
-                'date' => $report->date_cash,
+                'date' => \Carbon\Carbon::parse($report->date_cash)
+                    ->setTimezone('Europe/Moscow')
+                    ->toIso8601String(),
                 'starting_cash' => $report->startingcash ?? 0,
                 'payments' => PaymentsResource::collection($payments),
                // 'closed' => false, // или логика
@@ -143,8 +160,233 @@ class ReportController extends Controller
         return response()->json($result);
     }
 
-    public function makePayMethodPatient(Request $request)
+    public function makeMedical(Request $request, $patient_id)
     {
+        // Валидация данных
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'purpose' => 'nullable|exists:dict_payment_purposes,id',
+            'details' => 'required|string',
+            'methods' => 'required|json',
+            'receipt_id' => 'nullable|uuid|exists:receipts,id',
+            'created_by' => 'nullable|uuid|exists:users,id',
+            'doctor_id' => 'nullable|uuid|exists:doctors,id',
+            'patient_id' => 'nullable|uuid|exists:patients,id',
+        ]);
 
+        //считаем баланс платежа
+        $totalAmount = 0;
+        foreach ($validated['methods'] as $method) {
+            if (isset($method['value'])) {
+                $totalAmount += floatval($method['value']);
+            }
+        }
+        $receipt = Receipts::findOrFail($validated['receipt_id']);
+        if (!$receipt) {
+            return response()->json(['error' => 'Связанный чек не найден'], 404);
+        }
+        $totalPrice = $receipt->total_amount - $receipt->discount;
+        if($totalAmount-$totalPrice != 0)
+            $this->updateBalanceWithoutRecord($patient_id, $totalAmount - $totalPrice, $request);
+
+        // Находим пациента
+        $patient = Patients::findOrFail($patient_id);
+
+        // Создаем платеж
+        $payment = Payments::create([
+            'date' => $validated['date'],
+            'purpose' => $validated['purpose'],
+            'details' => $validated['details'],
+            'methods' => $validated['methods'],
+            'patient_id' => $patient,
+            'receipt_id' => $validated['receipt_id'] ?? null,
+            'created_by' => $validated['created_by'] ?? null,
+            'doctor_id' => $validated['doctor_id'] ?? null,
+        ]);
+
+        // Производим начисления врачам
+        $medical_services = MedicalServices::where('receipt_id', $validated['receipt_id'])->get();
+        foreach ($medical_services as $medicalService) {
+            // agent
+            $price_list_item = PricelistItem::findOrFail($medicalService->pricelist_item_id);
+            if($price_list_item->fixedagentfee != NULL)
+                $agenfee = $price_list_item->fixedagentfee;
+            else
+                $agenfee = $price_list_item->pice*$medicalService->quantity*0.1;
+            // Обновляем баланс доктора
+            $doctor = Doctors::findOrFail($medicalService->agent_id);
+            $doctor->updateBalance(increment: $agenfee);
+
+            $category = Department::findOrFail($price_list_item->department_id);
+            if($category->name != "Лабораторные исследования"){
+                // performer
+                if($price_list_item->fixedSalary != NULL)
+                    $agenfee = $price_list_item->fixedSalary;
+                else{
+                    $salaries = Salaries::where('doctor_id', $medicalService->performer_id)->first();
+                    $agenfee = $price_list_item->pice*$medicalService->quantity*$salaries->rate*0.1;
+                }
+                // Обновляем баланс доктора
+                $doctor = Doctors::findOrFail($medicalService->performer_id);
+                $doctor->updateBalance(increment: $agenfee);
+            }
+        }
+        //переводим статус приемов в "Завершен"
+        $appoitmens = PatientAppointments::where('receipt_id', $validated['receipt_id'])->get();
+        foreach ($appoitmens as $appoitmen) {
+            $appoitmen->status = "Завершен";
+            $appoitmen->save();
+        }
+
+        // Находим или создаем отчет за сегодня
+        $today = date('Y-m-d');
+        $report = Report::firstOrCreate(
+            ['date' => $today],
+            ['total_amount' => 0, 'startingCash' => 0]
+        );
+
+        $report->startingсash += $totalAmount;
+        $report->save();
+
+        // Вернуть отчет за сегодня
+        return response()->json(new ReportResource($report));
+    }
+
+    public function updateBalanceWithoutRecord($patient_id, $increment, $request): void
+    {
+       Payments::create([
+            'date' => $request['date'],
+            'purpose' => $request['purpose'],
+            'details' => $request['details'],
+            'methods' => "{\"cash\": $increment}",
+            'patient_id' => $patient_id,
+            'created_by' => $request['created_by'] ?? null,
+        ]);
+
+        // Обновляем баланс пациента
+        $patient = Doctors::findOrFail($patient_id);
+        $patient->updateBalance(increment: $increment);
+    }
+
+    public function makePayout(Request $request, $doctor_id)
+    {
+        // Валидация данных
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'purpose' => 'nullable|exists:dict_payment_purposes,id',
+            'details' => 'required|string',
+            'methods' => 'required|json',
+            'receipt_id' => 'nullable|uuid|exists:receipts,id',
+            'created_by' => 'nullable|uuid|exists:users,id',
+            'doctor_id' => 'nullable|uuid|exists:doctors,id',
+            'patient_id' => 'nullable|uuid|exists:patients,id',
+        ]);
+
+        // Находим врача
+        $doctor = Doctors::findOrFail($doctor_id);
+
+        // Создаем платеж
+        $payment = Payments::create([
+            'date' => $validated['date'],
+            'purpose' => $validated['purpose'],
+            'details' => $validated['details'],
+            'methods' => $validated['methods'],
+            'doctor_id' => $doctor_id,
+            'receipt_id' => $validated['receipt_id'] ?? null,
+            'created_by' => $validated['created_by'] ?? null,
+            'patient_id' => $validated['patient_id'] ?? null,
+        ]);
+
+        // Находим или создаем отчет за сегодня
+        $today = date('Y-m-d');
+        $report = Report::firstOrCreate(
+            ['date' => $today],
+            ['total_amount' => 0, 'startingCash' => 0]
+        );
+
+        $totalAmount = 0;
+        foreach ($validated['methods'] as $method) {
+            if (isset($method['value'])) {
+                $totalAmount += floatval($method['value']);
+            }
+        }
+
+        $report->startingсash -= $totalAmount;
+        $report->save();
+
+        // Обновляем баланс доктора
+        $doctor->updateBalance(increment: $totalAmount);
+
+        // Вернуть отчет за сегодня
+        return response()->json(new ReportResource($report));
+    }
+
+    public function makeBalancePayment(Request $request, $id){
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'purpose' => 'nullable|exists:dict_payment_purposes,id',
+            'details' => 'required|string',
+            'methods' => 'required|json',
+            'receipt_id' => 'nullable|uuid|exists:receipts,id',
+            'created_by' => 'nullable|uuid|exists:users,id',
+            'doctor_id' => 'nullable|uuid|exists:doctors,id',
+            'patient_id' => 'nullable|uuid|exists:patients,id',
+        ]);
+
+        // Проверка, есть ли такой доктор или пациент
+        $doctor = Doctors::where('id', $id)->first();
+        $patient = Patients::where('id', $id)->first();
+
+        $associatedId = null;
+        $type = null;
+
+        if ($doctor) {
+            $associatedId = $doctor->id;
+            $type = 'doctor';
+        } elseif ($patient) {
+            $associatedId = $patient->id;
+            $type = 'patient';
+        } else {
+            return response()->json(['error' => 'Доктор или пациент не найден'], 404);
+        }
+
+        // Создаём платеж
+        $paymentData = [
+            'id' => $validated['id'],
+            'date' => $validated['date'],
+            'purpose' => $validated['purpose'],
+            'details' => $validated['details'],
+            'methods' => $validated['methods'],
+            'receipt_id' => $validated['receipt_id'] ?? null,
+            'created_by' => $validated['created_by'] ?? null,
+        ];
+
+        $totalAmount = 0;
+        foreach ($validated['methods'] as $method) {
+            if (isset($method['value'])) {
+                $totalAmount += floatval($method['value']);
+            }
+        }
+
+        if ($type === 'doctor') {
+            $paymentData['doctor_id'] = $associatedId;
+            $doctor->updateBalance(increment: $totalAmount);
+        } else {
+            $paymentData['patient_id'] = $associatedId;
+            $patient->updateBalance(increment: $totalAmount);
+        }
+
+        $payment = Payments::create($paymentData);
+
+        // Находим или создаем отчет за сегодня
+        $today = date('Y-m-d');
+        $report = Report::firstOrCreate(
+            ['date' => $today],
+            ['total_amount' => 0, 'startingCash' => 0]
+        );
+        $report->startingсash += $totalAmount;
+        $report->save();
+        // Вернуть отчет за сегодня
+        return response()->json(new ReportResource($report));
     }
 }
