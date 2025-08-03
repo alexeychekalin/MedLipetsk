@@ -17,6 +17,7 @@ class CreateDoctorsPricelistItemsTable extends Migration
 
             $table->foreign('id_doctor')->references('id')->on('doctors')->onDelete('cascade');
             $table->foreign('id_pricelist_item')->references('id')->on('pricelist_items')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 

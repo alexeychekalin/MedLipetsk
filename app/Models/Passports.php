@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Crypt;
 class Passports extends Model
 {
     protected $table = 'passports';
-    public $timestamps = false;
+    //public $timestamps = false;
     use HasUuids;
     protected $keyType = 'uuid';
     // Открытые для массового заполнения поля
@@ -21,6 +21,24 @@ class Passports extends Model
         'issue_date',
     ];
 
+    public function getIssueDateAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
+    public function getBirthdayAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        return \Carbon\Carbon::parse($value)
+            ->setTimezone('Europe/Moscow')
+            ->toIso8601String();
+    }
 
     // Геттер для поля series_number (расшифровка при чтении)
     public function getSeriesNumberAttribute($value)

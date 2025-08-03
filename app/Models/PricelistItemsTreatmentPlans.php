@@ -8,7 +8,7 @@ class PricelistItemsTreatmentPlans extends Model
 {
     protected $table = 'pricelist_items_treatment_plans';
 
-    public $timestamps = false;
+    //public $timestamps = false;
     protected $primaryKey = 'id_pricelist_item';
     protected $keyType = 'string';
     protected $fillable = [

@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Specialization extends Model
 {
     protected $table = 'dict_specializations';
-    public $timestamps = false;
+    //public $timestamps = false;
     protected $fillable = ['name'];
 }

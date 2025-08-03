@@ -16,6 +16,7 @@ class CreatePricelistItemsTreatmentPlansTable extends Migration
             $table->foreign('id_treatment_plan')->references('id')->on('treatment_plans')->onDelete('set null');
 
            // $table->primary(['id_pricelist_item', 'id_treatment_plan']);
+            $table->timestamps();
         });
     }
 

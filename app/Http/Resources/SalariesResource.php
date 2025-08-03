@@ -17,6 +17,8 @@ class SalariesResource extends JsonResource
             'monthly_amount' => $this->monthly_amount,
             'hourly_amount' => $this->hourly_amount,
             'doctor' => $this->doctor,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

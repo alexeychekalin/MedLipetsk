@@ -12,7 +12,7 @@ class MedicalServices extends Model
 
     public $incrementing = false;
     protected $keyType = 'uuid';
-    public $timestamps = false;
+   // public $timestamps = false;
     use HasUuids;
     protected $fillable = [
         'id',

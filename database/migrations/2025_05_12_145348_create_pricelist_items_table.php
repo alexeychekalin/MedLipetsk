@@ -19,7 +19,7 @@ class CreatePricelistItemsTable extends Migration
             $table->boolean('archived')->default(false)->comment('Архивный статус услуги');
             $table->float('fixedsalary')->nullable()->comment('Фиксированная оплата врачу за услугу');
             $table->float('fixedagentfee')->nullable()->comment('Фиксированный агентский сбор');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

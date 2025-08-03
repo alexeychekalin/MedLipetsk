@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('dict_departments', function (Blueprint $table) {
             $table->id()->comment('Уникальный идентификатор отделения'); // автоинкрементное primary key
             $table->string('name', 50)->notNullable()->comment('Название отделения');
-            //$table->timestamps(); // добавит created_at и updated_at
+            $table->timestamps(); // добавит created_at и updated_at
             $table->comment('Справочник отделений');
         });
     }

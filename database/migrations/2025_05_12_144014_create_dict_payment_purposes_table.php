@@ -11,7 +11,7 @@ class CreateDictPaymentPurposesTable extends Migration
         Schema::create('dict_payment_purposes', function (Blueprint $table) {
             $table->id()->comment('Уникальный идентификатор цели платежа');
             $table->string('name')->unique()->notNullable()->comment('Название цели платежа');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

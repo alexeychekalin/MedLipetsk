@@ -17,6 +17,8 @@ class UsersResource extends JsonResource
             'first_name' => $this->first_name,
             'patronymic_name' => $this->patronymic_name,
             'post' => $this->post,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

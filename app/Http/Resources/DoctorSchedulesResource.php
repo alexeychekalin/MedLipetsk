@@ -14,6 +14,8 @@ class DoctorSchedulesResource extends JsonResource
             'cabinet' => $this->cabinet,
             'starting' => $this->starting,
             'ending' => $this->ending,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
 
         ];
 

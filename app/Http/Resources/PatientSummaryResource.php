@@ -15,6 +15,8 @@ class PatientSummaryResource extends JsonResource
             'first_name' => $this->first_name,
             'patronymic_name' => $this->patronymic_name,
             'phone_number' => $this->phone_number,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

@@ -11,6 +11,8 @@ class PricelistItemsTreatmentPlansResource extends JsonResource
         return [
             'id_pricelist_item' => $this->id_pricelist_item,
             'id_treatment_plan' => $this->id_treatment_plan,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

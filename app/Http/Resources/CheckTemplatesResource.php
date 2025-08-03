@@ -14,6 +14,7 @@ class CheckTemplatesResource extends JsonResource
             'discount' => $this->discount,
             'medical_service' => $this->medical_service,
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

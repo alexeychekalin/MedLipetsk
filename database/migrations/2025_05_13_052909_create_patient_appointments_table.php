@@ -24,7 +24,7 @@ class CreatePatientAppointmentsTable extends Migration
             $table->foreign('schedule_id')->references('id')->on('doctor_schedules')->onDelete('cascade');
             $table->text('patient_comment')->nullable()->comment('Комментарии пациента');
             $table->boolean('sms_notification_sent')->default(false)->comment('Отправлено SMS');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

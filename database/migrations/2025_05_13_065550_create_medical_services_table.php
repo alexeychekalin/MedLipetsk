@@ -22,8 +22,7 @@ class CreateMedicalServicesTable extends Migration
             $table->uuid('receipt_id')->nullable()->comment('Связанный чек');
             $table->foreign('receipt_id')->references('id')->on('receipts')->onDelete('set null');
             $table->timestamp('date')->nullable()->comment('Дата оказания услуги');
-            $table->timestamp('created_at')->useCurrent();
-            //$table->timestamp('updated_at')->useCurrent();
+            $table->timestamps();
         });
     }
 

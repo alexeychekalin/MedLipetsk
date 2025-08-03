@@ -10,7 +10,7 @@ class Users extends Model
 {
     protected $table = 'users';
 
-    public $timestamps = false;
+   // public $timestamps = false;
 
     use HasUuids;
 

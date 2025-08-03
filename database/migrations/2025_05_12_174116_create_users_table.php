@@ -16,7 +16,7 @@ class CreateUsersTable extends Migration
             $table->string('first_name')->nullable()->comment('Имя в зашифрованном виде');
             $table->string('patronymic_name')->nullable()->comment('Отчество в зашифрованном виде');
             $table->string('post')->nullable()->comment('Должность пользователя');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

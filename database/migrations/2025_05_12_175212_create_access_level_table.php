@@ -11,7 +11,7 @@ class CreateAccessLevelTable extends Migration
         Schema::create('access_level', function (Blueprint $table) {
             $table->id()->autoIncrement()->comment('Уникальный идентификатор уровня доступа');
             $table->string('name')->notNullable()->unique()->comment('Название уровня доступа');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

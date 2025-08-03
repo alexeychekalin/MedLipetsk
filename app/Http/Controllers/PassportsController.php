@@ -19,7 +19,7 @@ class PassportsController extends Controller
         $validated = $request->validate([
             'series_number' => 'required|string',
             'authority' => 'required|string',
-            'gender' => 'required|in:M,F',
+            'gender' => 'required|in:M,F,Неизвестен',
             'birthday' => 'required|date',
             'issue_date' => 'required|date',
         ]);

@@ -14,7 +14,7 @@ class PatientAppointments extends Model
     use HasUuids;
     public $incrementing = false;
     protected $keyType = 'uuid';
-    public $timestamps = false;
+    //public $timestamps = false;
     protected $fillable = [
         'id',
         'scheduled_time',

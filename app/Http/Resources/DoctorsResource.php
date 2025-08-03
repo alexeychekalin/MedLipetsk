@@ -20,12 +20,14 @@ class DoctorsResource extends JsonResource
             'default_cabinet' => $this->default_cabinet,
             'balance' => $this->balance,
             'info' => $this->info,
-            'created_at' => $this->created_at,
+            //'created_at' => $this->created_at,
             'image' => $this->image,
             'id_user' => $this->id_user,
             'vacation_schedule' => $this->vacation_schedule,
             'as_patient' => $this->as_patient,
             'rating' => $this->rating,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

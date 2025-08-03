@@ -11,8 +11,10 @@ class NoteSummaryResource extends JsonResource
         return [
             'id' => $this->id,
             'text' => $this->text,
-            'created_at' => $this->created_at,
+            //'created_at' => $this->created_at,
             'created_by' => $this->created_by,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

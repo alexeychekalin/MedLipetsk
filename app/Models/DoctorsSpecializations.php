@@ -9,7 +9,7 @@ class DoctorsSpecializations extends Model
     protected $table = 'doctors_specializations';
 
     public $incrementing = false;
-    public $timestamps = false;
+   // public $timestamps = false;
     protected $primaryKey = 'id_doctor';
     protected $keyType = 'string';
    // protected $primaryKey = ['id_doctor', 'id_specialization'];

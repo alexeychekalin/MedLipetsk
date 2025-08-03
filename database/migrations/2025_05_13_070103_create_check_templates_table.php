@@ -12,9 +12,10 @@ class CreateCheckTemplatesTable extends Migration
             $table->uuid('id')->unique()->primary()->comment('Уникальный идентификатор');
             $table->string('title')->notNullable()->comment('Название шаблона');
             $table->float('discount')->default(0)->notNullable()->comment('Скидка');
-            $table->timestamp('created_at')->useCurrent();
+           // $table->timestamp('created_at')->useCurrent();
             $table->uuid('medical_service')->nullable()->comment('Связь с медицинской услугой');
             $table->foreign('medical_service')->references('id')->on('medical_services')->onDelete('set null');
+            $table->timestamps();
         });
     }
 

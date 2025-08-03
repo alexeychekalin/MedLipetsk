@@ -14,6 +14,8 @@ class UsersAccessLevelResource extends JsonResource
             //'access_level' => new \App\Http\Resources\AccessLevelResource($this->accessLevel->id),
             'user' => $this->user->id,
             'access_level' => $this->accessLevel->id,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

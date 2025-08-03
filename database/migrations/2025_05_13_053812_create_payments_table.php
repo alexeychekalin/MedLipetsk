@@ -24,7 +24,7 @@ class CreatePaymentsTable extends Migration
             $table->foreign('doctor_id')->references('id')->on('doctors')->onDelete('set null');
             $table->uuid('patient_id')->nullable()->comment('Пациент, связанный с платежом');
             $table->foreign('patient_id')->references('id')->on('patients')->onDelete('set null');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

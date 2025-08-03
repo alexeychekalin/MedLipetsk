@@ -15,6 +15,8 @@ class PassportsResource extends JsonResource
             'gender' => $this->gender,
             'birthday' => $this->birthday,
             'issue_date' => $this->issue_date,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -12,14 +13,14 @@ class AuthController extends Controller
     {
         $attr = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users_laravel,email',
+            'phone' => 'required|string|unique:users_laravel|max:20',
             'password' => 'required|string|min:6|confirmed'
         ]);
 
         $user = User::create([
             'name' => $attr['name'],
             'password' => bcrypt($attr['password']),
-            'email' => $attr['email']
+            'phone' => $attr['phone']
         ]);
 
         $token = $user->createToken('user_token')->plainTextToken;
@@ -33,17 +34,25 @@ class AuthController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'phone' => 'required|numeric',
             'password' => 'required',
             'device_name' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('phone', $request->phone)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response('Login invalid', 503);
         }
 
-        return $user->createToken($request->device_name)->plainTextToken;
+        return response()->json([
+            'token'=> explode("|", $user->createToken($request->device_name)->plainTextToken)[1]
+        ]);
+    }
+
+    public function allusers()
+    {
+        $users = User::all();
+        return response()->json($users);
     }
 }

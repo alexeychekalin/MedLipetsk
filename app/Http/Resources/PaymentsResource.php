@@ -18,6 +18,8 @@ class PaymentsResource extends JsonResource
             'created_by' => $this->created_by,
             'doctor_id' => $this->doctor_id,
             'patient_id' => $this->patient_id,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

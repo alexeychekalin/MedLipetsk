@@ -8,7 +8,7 @@ class DoctorsPricelistItems extends Model
 {
     protected $table = 'doctors_pricelist_items';
 
-    public $timestamps = false;
+    //public $timestamps = false;
     protected $primaryKey = 'id_doctor';
     protected $keyType = 'string';
     protected $fillable = [

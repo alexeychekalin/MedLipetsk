@@ -12,6 +12,8 @@ class DoctorsSpecializationsResource extends JsonResource
             'id_doctor' => $this->id_doctor,
             'id_specialization' => $this->id_specialization,
             'is_basic' => $this->is_basic,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

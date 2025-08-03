@@ -20,7 +20,7 @@ class CreateSalariesSnapshotTable extends Migration
             $table->date('date_start')->nullable()->comment('Дата начала');
             $table->date('date_finish')->nullable()->comment('Дата окончания');
 
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

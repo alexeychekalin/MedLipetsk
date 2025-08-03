@@ -12,7 +12,7 @@ class CheckTemplates extends Model
     public $incrementing = false;
     protected $keyType = 'uuid';
     use HasUuids;
-    public $timestamps = false;
+   // public $timestamps = false;
 
     protected $fillable = [
         'id',

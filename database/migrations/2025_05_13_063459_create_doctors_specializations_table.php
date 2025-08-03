@@ -17,6 +17,7 @@ class CreateDoctorsSpecializationsTable extends Migration
 
             $table->foreign('id_doctor')->references('id')->on('doctors')->onDelete('cascade');
             $table->foreign('id_specialization')->references('id')->on('dict_specializations')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 

@@ -11,7 +11,7 @@ class PricelistItemSnapshot extends Model
 
     protected $keyType = 'uuid';
     public $incrementing = false;
-    public $timestamps = false;
+    //public $timestamps = false;
     use HasUuids;
     protected $fillable = [
         'id',

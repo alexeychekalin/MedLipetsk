@@ -31,13 +31,13 @@ class CreateDoctorsTable extends Migration
             $table->integer('default_cabinet')->notNullable()->default(1)->comment('Кабинет');
             $table->float('balance')->notNullable()->default(0)->comment('Баланс');
             $table->text('info')->nullable()->comment('Доп. информация');
-            $table->timestamp('created_at')->useCurrent();
+           // $table->timestamp('created_at')->useCurrent();
             $table->binary('image')->nullable()->comment('Фото врача');
             $table->uuid('id_user')->nullable()->comment('Пользовательская учетная запись');
             $table->jsonb('vacation_schedule')->default('[]')->comment('График отпусков');
             $table->uuid('as_patient')->nullable()->comment('Связь с пациентом (если есть)');
             $table->float('rating')->default(0)->comment('Рейтинг врача');
-            //$table->timestamps();
+            $table->timestamps();
 
             $table->foreign('id_user')->references('id')->on('users')->onDelete('set null');
             $table->foreign('as_patient')->references('id')->on('patients')->onDelete('cascade');

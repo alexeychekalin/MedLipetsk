@@ -17,7 +17,7 @@ class ReportsController extends Controller
     {
         $validated = $request->validate([
             'startingcash' => 'numeric',
-            'date_cash' => 'required|date|unique:report,date_cash',
+            'created_at' => 'required|date|unique:report,created_at',
             'created_by' => 'nullable|exists:users,id',
         ]);
         $report = Report::create($validated);
@@ -33,7 +33,7 @@ class ReportsController extends Controller
     {
         $validated = $request->validate([
             'startingcash' => 'required|numeric',
-            'date_cash' => 'required|date|unique:report,date_cash,' . $report->id,
+            'created_at' => 'required|date|unique:report,created_at,' . $report->id,
             'created_by' => 'nullable|exists:users,id',
         ]);
         $report->update($validated);

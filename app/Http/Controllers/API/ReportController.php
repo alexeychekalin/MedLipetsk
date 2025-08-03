@@ -28,14 +28,14 @@ class ReportController extends Controller
         //return $dc-> store($request);
         $validated = $request->validate([
             'startingcash' => 'numeric',
-            'date_cash' => 'required|date|unique:report,date_cash',
+            'created_at' => 'required|date|unique:report,created_at',
             'created_by' => 'nullable|exists:users,id',
         ]);
-        $lastReport = Report::where('date', '<', $validated['date_cash'])->orderBy('date_cash', 'desc')->first();
+        $lastReport = Report::where('date', '<', $validated['created_at'])->orderBy('created_at', 'desc')->first();
         $startingCash = $lastReport ? $lastReport->starting_cash : 0;
 
         $report = Report::create([
-            'date_cash' => date('Y-m-d'),
+            'created_at' => date('Y-m-d'),
             'startingcash' => $startingCash,
             'created_by' => $validated['created_by'] ?? null,
         ]);
@@ -91,7 +91,7 @@ class ReportController extends Controller
         if (!$payment) response()->json(['error' => 'Платеж не найден'], 404);
 
         $paymentDate = Carbon::parse($payment->date)->toDateString();
-        $report = Report::where('date_cash', $paymentDate)->first();
+        $report = Report::where('created_at', $paymentDate)->first();
         if (!$report) {
             return response()->json(['error' => 'Отчет не найден'], 404);
         }
@@ -169,7 +169,7 @@ class ReportController extends Controller
         if (!$payment) response()->json(['error' => 'Платеж не найден'], 404);
         //return $payment->date;
         $paymentDate = Carbon::parse($payment->date)->toDateString();
-        $report = Report::where('date_cash', $paymentDate)->first();
+        $report = Report::where('created_at', $paymentDate)->first();
         if (!$report) {
             return response()->json(['error' => 'Отчет не найден'], 404);
         }
@@ -180,7 +180,7 @@ class ReportController extends Controller
             ->get();
 
         $response = [
-            'date' => \Carbon\Carbon::parse($report->date_cash)
+            'date' => \Carbon\Carbon::parse($report->created_at)
                 ->setTimezone('Europe/Moscow')
                 ->toIso8601String(),
             'starting_cash' => $report->startingcash ?? 0,
@@ -195,7 +195,7 @@ class ReportController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
         ]);
-        $report = Report::where('date_cash', $validated['date'])->first();
+        $report = Report::where('created_at', $validated['date'])->first();
 
         if (!$report) {
             return response()->json(['error' => 'Отчет за этот день не найден'], 404);
@@ -204,7 +204,7 @@ class ReportController extends Controller
             ->get();
 
         $response = [
-            'date' => \Carbon\Carbon::parse($report->date_cash)
+            'date' => \Carbon\Carbon::parse($report->created_at)
                 ->setTimezone('Europe/Moscow')
                 ->toIso8601String(),
             'starting_cash' => $report->startingcash ?? 0,
@@ -228,7 +228,7 @@ class ReportController extends Controller
 
         $paymentDate = Carbon::parse($payment->date);
 
-        $report = Report::whereDate('date_cash', $paymentDate->toDateString())->first();
+        $report = Report::whereDate('created_at', $paymentDate->toDateString())->first();
 
         if (!$report) {
             return response()->json(['error' => 'Отчет за этот день не найден'], 404);
@@ -237,7 +237,7 @@ class ReportController extends Controller
             ->get();
 
         $response = [
-            'date' => \Carbon\Carbon::parse($report->date_cash)
+            'date' => \Carbon\Carbon::parse($report->created_at)
                 ->setTimezone('Europe/Moscow')
                 ->toIso8601String(),
             'starting_cash' => $report->startingcash ?? 0,
@@ -255,8 +255,8 @@ class ReportController extends Controller
             'to' => 'required|date|after_or_equal:start_date',
         ]);
 
-        $reports = Report::whereBetween('date_cash', [$validated['from'], $validated['to']])
-            ->orderBy('date_cash', 'asc')
+        $reports = Report::whereBetween('created_at', [$validated['from'], $validated['to']])
+            ->orderBy('created_at', 'asc')
             ->get();
 
         if ($reports->isEmpty()) {
@@ -266,11 +266,11 @@ class ReportController extends Controller
         $result = [];
 
         foreach ($reports as $report) {
-            $payments = Payments::whereDate('date', $report->date_cash)
+            $payments = Payments::whereDate('date', $report->created_at)
                 ->get();
 
             $result[] = [
-                'date' => \Carbon\Carbon::parse($report->date_cash)
+                'date' => \Carbon\Carbon::parse($report->created_at)
                     ->setTimezone('Europe/Moscow')
                     ->toIso8601String(),
                 'starting_cash' => $report->startingcash ?? 0,

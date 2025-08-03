@@ -18,7 +18,9 @@ class MedicalServicesResource extends JsonResource
             'conclusion' => $this->conclusion,
             'receipt_id' => $this->receipt_id,
             'date' => $this->date,
+            //'created_at' => $this->created_at,
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

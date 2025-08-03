@@ -17,7 +17,7 @@ class CreateSalariesTable extends Migration
             $table->uuid('doctor')->nullable()->comment('ID врача');
 
             $table->foreign('doctor')->references('id')->on('doctors')->onDelete('cascade');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

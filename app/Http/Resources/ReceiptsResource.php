@@ -12,7 +12,9 @@ class ReceiptsResource extends JsonResource
             'id' => $this->id,
             'total_amount' => $this->total_amount,
             'discount' => $this->discount,
+            //'created_at' => $this->created_at,
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

@@ -14,8 +14,7 @@ class CreateUsersAccessLevelTable extends Migration
 
             $table->foreign('id_user')->references('id')->on('users')->onDelete('set null');
             $table->foreign('id_access_level')->references('id')->on('access_level')->onDelete('set null');
-
-            //$table->timestamps();
+            $table->timestamps();
 
             // Можно добавить уникальность по паре
            // $table->unique(['id_user', 'id_access_level']);

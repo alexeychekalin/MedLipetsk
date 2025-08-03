@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Crypt;
 class PatientSummary extends Model
 {
     protected $table = 'patients';
-    public $timestamps = false;
+    //public $timestamps = false;
     use HasUuids;
     protected $guarded = [];
 

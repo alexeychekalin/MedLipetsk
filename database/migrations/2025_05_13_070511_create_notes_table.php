@@ -19,6 +19,7 @@ class CreateNotesTable extends Migration
             $table->foreign('doctor_schedule')->references('id')->on('doctor_schedules')->onDelete('set null');
             $table->uuid('patient_appointment')->nullable()->comment('Запись на прием пациента');
             $table->foreign('patient_appointment')->references('id')->on('patient_appointments')->onDelete('cascade');
+            //$table->timestamps();
         });
     }
 

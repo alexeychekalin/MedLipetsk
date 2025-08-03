@@ -13,6 +13,8 @@ class DoctorsPricelistItemsResource extends JsonResource
             'id_doctor' => $this->id_doctor,
             'id_pricelist_item' => $this->id_pricelist_item,
             'is_basic' => $this->is_basic,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

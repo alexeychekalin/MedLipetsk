@@ -20,6 +20,8 @@ class PatientAppointmentsResource extends JsonResource
             'schedule_id' => $this->schedule_id,
             'patient_comment' => $this->patient_comment,
             'sms_notification_sent' => $this->sms_notification_sent,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
 
         if (str_contains($request->path(), 'v1')) {

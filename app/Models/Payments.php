@@ -9,7 +9,7 @@ class Payments extends Model
 {
     protected $table = 'payments';
     use HasUuids;
-    public $timestamps = false;
+    //public $timestamps = false;
     public $incrementing = false;
     protected $keyType = 'uuid';
     protected $casts = [

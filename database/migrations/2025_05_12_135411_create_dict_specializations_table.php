@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('dict_specializations', function (Blueprint $table) {
             $table->id()->comment('Уникальный идентификатор специализации');
             $table->string('name', 50)->notNullable()->comment('Название специализации');
-            //$table->timestamps();
+            $table->timestamps();
             $table->comment('Справочник специализаций');
         });
     }

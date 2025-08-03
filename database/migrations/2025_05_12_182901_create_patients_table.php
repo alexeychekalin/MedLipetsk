@@ -24,9 +24,9 @@ class CreatePatientsTable extends Migration
             $table->float('balance')->notNullable()->default(0);
             $table->uuid('passport')->nullable()->comment('Ссылка на паспорт');
             $table->text('info')->nullable()->comment('Дополнительная информация');
-            $table->timestamp('created_at')->useCurrent();
+           // $table->timestamp('created_at')->useCurrent();
             $table->binary('image')->nullable()->comment('Фото пациента');
-            //$table->timestamps();
+            $table->timestamps();
 
             $table->foreign('passport')->references('id')->on('passports')->onDelete('set null');
         });

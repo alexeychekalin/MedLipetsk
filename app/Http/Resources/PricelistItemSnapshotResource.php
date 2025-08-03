@@ -18,6 +18,8 @@ class PricelistItemSnapshotResource extends JsonResource
             'fixedagentfee' => $this->fixedagentfee,
             'date_start' => $this->date_start,
             'date_finish' => $this->date_finish,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

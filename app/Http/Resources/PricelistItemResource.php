@@ -18,6 +18,8 @@ class PricelistItemResource extends JsonResource
             'archived' => $this->archived,
             'fixedsalary' => $this->fixedsalary,
             'fixedagentfee' => $this->fixedagentfee,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

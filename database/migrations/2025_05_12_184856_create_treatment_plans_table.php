@@ -15,7 +15,7 @@ class CreateTreatmentPlansTable extends Migration
             $table->string('kind')->notNullable()->comment('Тип плана лечения');
             $table->date('starting_date')->notNullable()->default(DB::raw('CURRENT_DATE'))->comment('Дата начала');
             $table->date('expiration_date')->notNullable()->comment('Дата окончания');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

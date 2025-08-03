@@ -17,8 +17,10 @@ class PatientsResource extends JsonResource
             'balance' => $this->balance,
             'passport' => $this->passport, // здесь можно расширить, например, сериализовать паспорт
             'info' => $this->info,
-            'created_at' => $this->created_at,
+            //'created_at' => $this->created_at,
             'image' => $this->image,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

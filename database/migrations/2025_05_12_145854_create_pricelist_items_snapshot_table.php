@@ -22,7 +22,7 @@ class CreatePricelistItemsSnapshotTable extends Migration
             $table->date('date_start')->nullable()->comment('Дата начала действия');
             $table->date('date_finish')->nullable()->comment('Дата окончания действия');
 
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

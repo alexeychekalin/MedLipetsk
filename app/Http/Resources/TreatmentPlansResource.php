@@ -14,6 +14,8 @@ class TreatmentPlansResource extends JsonResource
             'kind' => $this->kind,
             'starting_date' => $this->starting_date,
             'expiration_date' => $this->expiration_date,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

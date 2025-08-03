@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UsersAccessLevel extends Model
 {
     protected $table = 'users_access_level';
-    public $timestamps = false;
+    //public $timestamps = false;
     protected $primaryKey = 'id_user';
     protected $keyType = 'string';
     protected $guarded = [];

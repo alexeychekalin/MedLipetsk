@@ -10,7 +10,7 @@ class Receipts extends Model
     protected $table = 'receipts';
 
     public $incrementing = false;
-    public $timestamps = false;
+    //public $timestamps = false;
     use HasUuids;
     protected $keyType = 'uuid';
 

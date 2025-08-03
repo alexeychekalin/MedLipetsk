@@ -15,7 +15,7 @@ class CreateDoctorSchedulesTable extends Migration
             $table->integer('cabinet')->notNullable()->default(1)->comment('Кабинет');
             $table->timestamp('starting')->notNullable()->comment('Время начала');
             $table->timestamp('ending')->notNullable()->comment('Время окончания');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 

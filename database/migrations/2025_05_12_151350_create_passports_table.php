@@ -12,10 +12,10 @@ class CreatePassportsTable extends Migration
             $table->uuid('id')->primary()->comment('Уникальный идентификатор паспорта');
             $table->string('series_number')->notNullable()->comment('Серия и номер паспорта (зашифровано)');
             $table->string('authority')->notNullable()->comment('Орган, выдавший паспорт (зашифровано)');
-            $table->string('gender', 10)->nullable()->comment('Пол пациента, например "M" или "F"');
+            $table->string('gender', 10)->nullable()->comment('Пол пациента, например "M", "F" "Неизвестен"');
             $table->date('birthday')->notNullable()->comment('Дата рождения пациента');
             $table->date('issue_date')->notNullable()->comment('Дата выдачи паспорта');
-            //$table->timestamps();
+            $table->timestamps();
         });
     }
 
