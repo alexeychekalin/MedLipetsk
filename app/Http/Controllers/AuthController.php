@@ -55,4 +55,10 @@ class AuthController extends Controller
         $users = User::all();
         return response()->json($users);
     }
+
+    public function call_events()
+    {
+        //$users = User::all();
+        return response()->json('token-ok');
+    }
 }
