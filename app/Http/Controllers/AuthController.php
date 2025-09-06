@@ -62,27 +62,49 @@ class AuthController extends Controller
 
     public function call_events(Request $request)
     {
+        // Извлекаем номер из запроса
         $fromNumber = $request['from_number'];
         preg_match('/sip:(\d+)@/', $fromNumber, $matches);
-        $phoneNumber = $matches[1] ?? '';
-        $phoneNumber = substr($fromNumber, 4, strpos($fromNumber, '@') - 4);
+        $phoneNumber = $matches[1] ?? substr($fromNumber, 4, strpos($fromNumber, '@') - 4);
         $cleanPhone = preg_replace('/[^0-9]/', '', $phoneNumber);
 
-        $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')
-            ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) .'%')
-            ->first();
+        // Ищем пациента
+        $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')->first();
 
-        // Отправляем полные данные пациента через SSE
-        if ($patient) {
-            Http::post('http://83.166.244.225/api/sse/send-full-patient', [
-                'patient_id' => $patient->id
-            ]);
-        } else {
-            Http::post('http://83.166.244.225/api/sse/find-full-patient', [
-                'phone_number' => $cleanPhone
-            ]);
-        }
+        // Отправляем данные через SSE (простой HTTP запрос)
+        $this->sendToSSE($cleanPhone);
 
         return new PatientSummaryResource($patient);
+    }
+
+    /**
+     * Отправка данных в SSE
+     */
+    private function sendToSSE($phoneNumber)
+    {
+        try {
+            // Простой HTTP запрос без зависимостей
+            $url = 'https://83.166.244.225/sse/send-patient';
+            $data = http_build_query(['phone_number' => $phoneNumber]);
+
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                    'content' => $data,
+                    'timeout' => 2 // Таймаут 2 секунды
+                ],
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                ]
+            ]);
+
+            @file_get_contents($url, false, $context);
+
+        } catch (\Exception $e) {
+            // Просто логируем ошибку, не прерываем работу
+            Log::info('SSE send background: ' . $e->getMessage());
+        }
     }
 }

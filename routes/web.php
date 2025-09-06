@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SSEController;
 
 // Основные SSE endpoints
-Route::get('/sse/patient-stream', [SSEController::class, 'patientStream']);
+Route::get('/sse/stream', [SSEController::class, 'stream']);
 
 
 // Тестовая страница

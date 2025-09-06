@@ -9,9 +9,9 @@ use App\Models\Patients;
 class SSEController extends Controller
 {
     /**
-     * SSE поток для данных пациентов (автоподключение)
+     * SSE поток для клиентов
      */
-    public function patientStream()
+    public function stream()
     {
         config(['session.driver' => 'array']);
 
@@ -19,134 +19,68 @@ class SSEController extends Controller
             set_time_limit(0);
             ignore_user_abort(true);
 
-            if (ob_get_level() > 0) {
-                ob_end_clean();
-            }
+            // Очищаем буферы
+            while (ob_get_level() > 0) ob_end_clean();
             ob_implicit_flush(true);
 
             // Отправляем начальное сообщение
             echo "event: connected\n";
-            echo "data: " . json_encode([
-                    'message' => 'Подключение к пациентам установлено',
-                    'time' => now()->toDateTimeString()
-                ]) . "\n\n";
+            echo "data: " . json_encode(['message' => 'SSE Connected']) . "\n\n";
             flush();
 
-            $lastMessageTime = time();
-            $counter = 0;
+            $filePath = storage_path('app/sse_messages.json');
+            $lastCheck = time();
 
             while (true) {
-                if (connection_aborted() === 1) {
-                    break;
-                }
+                if (connection_aborted()) break;
 
-                // Проверяем новые сообщения
-                $newMessages = $this->checkForNewMessages($lastMessageTime);
+                // Проверяем новые сообщения каждую секунду
+                if (file_exists($filePath)) {
+                    $messages = json_decode(file_get_contents($filePath), true) ?? [];
 
-                foreach ($newMessages as $message) {
-                    if (isset($message['event'])) {
-                        echo "event: {$message['event']}\n";
-                        echo "data: " . json_encode($message['data'] ?? $message) . "\n\n";
-                    } else {
-                        echo "data: " . json_encode($message) . "\n\n";
+                    foreach ($messages as $message) {
+                        if (isset($message['event']) && isset($message['data'])) {
+                            echo "event: {$message['event']}\n";
+                            echo "data: " . json_encode($message['data']) . "\n\n";
+                        } else {
+                            echo "data: " . json_encode($message) . "\n\n";
+                        }
+                        flush();
                     }
-                    flush();
-                    $lastMessageTime = time();
+
+                    // Очищаем файл после отправки
+                    file_put_contents($filePath, json_encode([]));
                 }
 
-                // Ping каждые 30 секунд
-                if ($counter % 30 === 0) {
-                    echo ": ping\n\n";
-                    flush();
-                }
-
-                sleep(2);
-                $counter++;
-
-                if ($counter > 1800) break; // 30 минут
+                sleep(1); // Проверяем каждую секунду
             }
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache',
             'Connection' => 'keep-alive',
-            'X-Accel-Buffering' => 'no',
         ]);
     }
 
     /**
-     * Отправка полных данных пациента
+     * Endpoint для отправки данных пациента
      */
-    public function sendFullPatient(Request $request)
+    public function sendPatient(Request $request)
     {
-        $validated = $request->validate([
-            'patient_id' => 'required|string|exists:patients,id'
-        ]);
-
-        $patient = Patients::find($validated['patient_id']);
-
-        if (!$patient) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Пациент не найден'
-            ], 404);
+        $phone = $request->input('phone_number');
+        if (!$phone) {
+            return response()->json(['error' => 'Phone number required'], 400);
         }
 
-        // Получаем ВСЕ данные пациента
-        $patientData = [
-            'id' => $patient->id,
-            'second_name' => $patient->second_name,
-            'first_name' => $patient->first_name,
-            'patronymic_name' => $patient->patronymic_name,
-            'phone_number' => $patient->phone_number,
-            'balance' => $patient->balance,
-            'passport' => $patient->passport,
-            'info' => $patient->info,
-            'image' => $patient->image,
-            'created_at' => $patient->created_at,
-            'updated_at' => $patient->updated_at,
-            // Добавляем вычисляемые поля
-            'full_name' => trim($patient->second_name . ' ' . $patient->first_name . ' ' . ($patient->patronymic_name ?? '')),
-            'formatted_phone' => $this->formatPhone($patient->phone_number),
-            'formatted_balance' => number_format($patient->balance, 2, '.', ' ') . ' ₽'
-        ];
+        // Очищаем номер
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
 
+        // Ищем пациента
+        $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')->first();
+
+        // Формируем сообщение
         $message = [
-            'id' => uniqid(),
-            'event' => 'patient_full_data',
-            'data' => $patientData,
-            'timestamp' => time(),
-            'time' => now()->toDateTimeString()
-        ];
-
-        $this->saveMessageToFile($message);
-
-        Log::info('Full patient data sent via SSE', $patientData);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Полные данные пациента отправлены',
-            'patient' => $patientData
-        ]);
-    }
-
-    /**
-     * Автоматический поиск и отправка полных данных по номеру
-     */
-    public function sendFullPatientByPhone(Request $request)
-    {
-        $validated = $request->validate([
-            'phone_number' => 'required|string'
-        ]);
-
-        $cleanPhone = preg_replace('/[^0-9]/', '', $validated['phone_number']);
-
-        $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')
-            ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) . '%')
-            ->first();
-
-        if ($patient) {
-            // Полные данные пациента
-            $patientData = [
+            'event' => 'patient_data',
+            'data' => $patient ? [
                 'id' => $patient->id,
                 'second_name' => $patient->second_name,
                 'first_name' => $patient->first_name,
@@ -155,99 +89,33 @@ class SSEController extends Controller
                 'balance' => $patient->balance,
                 'passport' => $patient->passport,
                 'info' => $patient->info,
-                'image' => $patient->image,
                 'created_at' => $patient->created_at,
                 'updated_at' => $patient->updated_at,
-                'full_name' => trim($patient->second_name . ' ' . $patient->first_name . ' ' . ($patient->patronymic_name ?? '')),
-                'formatted_phone' => $this->formatPhone($patient->phone_number),
-                'formatted_balance' => number_format($patient->balance, 2, '.', ' ') . ' ₽'
-            ];
+                'full_name' => trim($patient->second_name . ' ' . $patient->first_name . ' ' . ($patient->patronymic_name ?? ''))
+            ] : [
+                'message' => 'Patient not found',
+                'searched_phone' => $cleanPhone
+            ]
+        ];
 
-            $message = [
-                'id' => uniqid(),
-                'event' => 'patient_full_data',
-                'data' => $patientData,
-                'timestamp' => time(),
-                'time' => now()->toDateTimeString()
-            ];
-        } else {
-            $message = [
-                'id' => uniqid(),
-                'event' => 'patient_not_found',
-                'data' => [
-                    'searched_phone' => $cleanPhone,
-                    'message' => 'Пациент не найден',
-                    'timestamp' => now()->toDateTimeString()
-                ],
-                'timestamp' => time()
-            ];
-        }
-
-        $this->saveMessageToFile($message);
+        // Сохраняем в файл
+        $this->saveMessage($message);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Поиск пациента выполнен',
-            'patient_found' => $patient !== null,
-            'patient' => $patient ? $patientData : null
+            'message' => 'Patient data sent to SSE',
+            'patient_found' => !!$patient
         ]);
     }
 
     /**
-     * Форматирование номера телефона
+     * Простое сохранение сообщения в файл
      */
-    private function formatPhone($phone)
-    {
-        $clean = preg_replace('/[^0-9]/', '', $phone);
-        if (preg_match('/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/', $clean, $matches)) {
-            return "+{$matches[1]} ({$matches[2]}) {$matches[3]}-{$matches[4]}-{$matches[5]}";
-        }
-        return $phone;
-    }
-
-    /**
-     * Проверяет новые сообщения в файле
-     */
-    private function checkForNewMessages($lastTime)
-    {
-        $messages = [];
-        $filePath = storage_path('app/sse_messages.json');
-
-        if (file_exists($filePath)) {
-            $content = file_get_contents($filePath);
-            $allMessages = json_decode($content, true) ?? [];
-
-            foreach ($allMessages as $message) {
-                if ($message['timestamp'] > $lastTime) {
-                    $messages[] = $message;
-                }
-            }
-        }
-
-        return $messages;
-    }
-
-    /**
-     * Сохраняет сообщение в файл
-     */
-    private function saveMessageToFile($message)
+    private function saveMessage($message)
     {
         $filePath = storage_path('app/sse_messages.json');
-        $messages = [];
-
-        if (file_exists($filePath)) {
-            $content = file_get_contents($filePath);
-            $messages = json_decode($content, true) ?? [];
-        }
-
+        $messages = file_exists($filePath) ? json_decode(file_get_contents($filePath), true) ?? [] : [];
         $messages[] = $message;
-
-        if (count($messages) > 50) {
-            $messages = array_slice($messages, -50);
-        }
-
-        file_put_contents($filePath, json_encode($messages, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        file_put_contents($filePath, json_encode($messages));
     }
-
-    // ... остальные методы ...
 }
