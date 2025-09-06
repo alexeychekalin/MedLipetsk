@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Patients;
 use App\Models\User;
 use App\Models\Users;
 use Illuminate\Http\Request;
@@ -56,9 +57,19 @@ class AuthController extends Controller
         return response()->json($users);
     }
 
-    public function call_events()
+    public function call_events(Request $request)
     {
-        //$users = User::all();
-        return response()->json('token-ok');
+        $data = json_decode($request, true);
+        $fromNumber = $data['from_number'];
+
+        preg_match('/sip:(\d+)@/', $fromNumber, $matches);
+        $phoneNumber = $matches[1] ?? '';
+        $phoneNumber = substr($fromNumber, 4, strpos($fromNumber, '@') - 4);
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phoneNumber);
+        $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')
+            ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) .'%')
+            ->first();
+
+        return response()->json($patient);
     }
 }
