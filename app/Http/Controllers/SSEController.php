@@ -4,16 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Patients;
 
 class SSEController extends Controller
 {
     /**
-     * SSE поток без блокировки сессии
+     * SSE поток для данных пациентов (автоподключение)
      */
-    public function simpleStream()
+    public function patientStream()
     {
-        // Отключаем сессию для этого endpoint
         config(['session.driver' => 'array']);
 
         return response()->stream(function () {
@@ -26,9 +25,9 @@ class SSEController extends Controller
             ob_implicit_flush(true);
 
             // Отправляем начальное сообщение
+            echo "event: connected\n";
             echo "data: " . json_encode([
-                    'type' => 'connected',
-                    'message' => 'Подключение установлено',
+                    'message' => 'Подключение к пациентам установлено',
                     'time' => now()->toDateTimeString()
                 ]) . "\n\n";
             flush();
@@ -41,25 +40,30 @@ class SSEController extends Controller
                     break;
                 }
 
-                // Проверяем новые сообщения в файле
+                // Проверяем новые сообщения
                 $newMessages = $this->checkForNewMessages($lastMessageTime);
 
                 foreach ($newMessages as $message) {
-                    echo "data: " . json_encode($message) . "\n\n";
+                    if (isset($message['event'])) {
+                        echo "event: {$message['event']}\n";
+                        echo "data: " . json_encode($message['data'] ?? $message) . "\n\n";
+                    } else {
+                        echo "data: " . json_encode($message) . "\n\n";
+                    }
                     flush();
                     $lastMessageTime = time();
                 }
 
-                // Отправляем ping каждые 15 секунд
-                if ($counter % 15 === 0) {
+                // Ping каждые 30 секунд
+                if ($counter % 30 === 0) {
                     echo ": ping\n\n";
                     flush();
                 }
 
-                sleep(1);
+                sleep(2);
                 $counter++;
 
-                if ($counter > 3600) break;
+                if ($counter > 1800) break; // 30 минут
             }
         }, 200, [
             'Content-Type' => 'text/event-stream',
@@ -70,33 +74,135 @@ class SSEController extends Controller
     }
 
     /**
-     * Endpoint для отправки уведомлений (работает параллельно)
+     * Отправка полных данных пациента
      */
-    public function sendEvent(Request $request)
+    public function sendFullPatient(Request $request)
     {
         $validated = $request->validate([
-            'message' => 'required|string',
-            'type' => 'sometimes|string|in:info,success,warning,error'
+            'patient_id' => 'required|string|exists:patients,id'
         ]);
 
-        // Сохраняем сообщение в файл
+        $patient = Patients::find($validated['patient_id']);
+
+        if (!$patient) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Пациент не найден'
+            ], 404);
+        }
+
+        // Получаем ВСЕ данные пациента
+        $patientData = [
+            'id' => $patient->id,
+            'second_name' => $patient->second_name,
+            'first_name' => $patient->first_name,
+            'patronymic_name' => $patient->patronymic_name,
+            'phone_number' => $patient->phone_number,
+            'balance' => $patient->balance,
+            'passport' => $patient->passport,
+            'info' => $patient->info,
+            'image' => $patient->image,
+            'created_at' => $patient->created_at,
+            'updated_at' => $patient->updated_at,
+            // Добавляем вычисляемые поля
+            'full_name' => trim($patient->second_name . ' ' . $patient->first_name . ' ' . ($patient->patronymic_name ?? '')),
+            'formatted_phone' => $this->formatPhone($patient->phone_number),
+            'formatted_balance' => number_format($patient->balance, 2, '.', ' ') . ' ₽'
+        ];
+
         $message = [
             'id' => uniqid(),
-            'type' => $validated['type'] ?? 'info',
-            'message' => $validated['message'],
+            'event' => 'patient_full_data',
+            'data' => $patientData,
             'timestamp' => time(),
             'time' => now()->toDateTimeString()
         ];
 
         $this->saveMessageToFile($message);
 
-        Log::info('SSE Event saved to file', $message);
+        Log::info('Full patient data sent via SSE', $patientData);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Событие сохранено и будет доставлено',
-            'event_id' => $message['id']
+            'message' => 'Полные данные пациента отправлены',
+            'patient' => $patientData
         ]);
+    }
+
+    /**
+     * Автоматический поиск и отправка полных данных по номеру
+     */
+    public function sendFullPatientByPhone(Request $request)
+    {
+        $validated = $request->validate([
+            'phone_number' => 'required|string'
+        ]);
+
+        $cleanPhone = preg_replace('/[^0-9]/', '', $validated['phone_number']);
+
+        $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')
+            ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) . '%')
+            ->first();
+
+        if ($patient) {
+            // Полные данные пациента
+            $patientData = [
+                'id' => $patient->id,
+                'second_name' => $patient->second_name,
+                'first_name' => $patient->first_name,
+                'patronymic_name' => $patient->patronymic_name,
+                'phone_number' => $patient->phone_number,
+                'balance' => $patient->balance,
+                'passport' => $patient->passport,
+                'info' => $patient->info,
+                'image' => $patient->image,
+                'created_at' => $patient->created_at,
+                'updated_at' => $patient->updated_at,
+                'full_name' => trim($patient->second_name . ' ' . $patient->first_name . ' ' . ($patient->patronymic_name ?? '')),
+                'formatted_phone' => $this->formatPhone($patient->phone_number),
+                'formatted_balance' => number_format($patient->balance, 2, '.', ' ') . ' ₽'
+            ];
+
+            $message = [
+                'id' => uniqid(),
+                'event' => 'patient_full_data',
+                'data' => $patientData,
+                'timestamp' => time(),
+                'time' => now()->toDateTimeString()
+            ];
+        } else {
+            $message = [
+                'id' => uniqid(),
+                'event' => 'patient_not_found',
+                'data' => [
+                    'searched_phone' => $cleanPhone,
+                    'message' => 'Пациент не найден',
+                    'timestamp' => now()->toDateTimeString()
+                ],
+                'timestamp' => time()
+            ];
+        }
+
+        $this->saveMessageToFile($message);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Поиск пациента выполнен',
+            'patient_found' => $patient !== null,
+            'patient' => $patient ? $patientData : null
+        ]);
+    }
+
+    /**
+     * Форматирование номера телефона
+     */
+    private function formatPhone($phone)
+    {
+        $clean = preg_replace('/[^0-9]/', '', $phone);
+        if (preg_match('/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/', $clean, $matches)) {
+            return "+{$matches[1]} ({$matches[2]}) {$matches[3]}-{$matches[4]}-{$matches[5]}";
+        }
+        return $phone;
     }
 
     /**
@@ -136,36 +242,12 @@ class SSEController extends Controller
 
         $messages[] = $message;
 
-        // Сохраняем только последние 50 сообщений
         if (count($messages) > 50) {
             $messages = array_slice($messages, -50);
         }
 
-        file_put_contents($filePath, json_encode($messages, JSON_PRETTY_PRINT));
+        file_put_contents($filePath, json_encode($messages, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     }
 
-    /**
-     * Очистка сообщений
-     */
-    public function clearMessages()
-    {
-        $filePath = storage_path('app/sse_messages.json');
-        if (file_exists($filePath)) {
-            unlink($filePath);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Сообщения очищены'
-        ]);
-    }
-
-    public function status()
-    {
-        return response()->json([
-            'status' => 'active',
-            'time' => now()->toDateTimeString(),
-            'message' => 'SSE сервер работает без блокировки сессии'
-        ]);
-    }
+    // ... остальные методы ...
 }

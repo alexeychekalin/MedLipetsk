@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PatientSummaryResource;
 use App\Models\Patients;
+use App\Models\PatientSummary;
 use App\Models\User;
 use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -59,17 +62,27 @@ class AuthController extends Controller
 
     public function call_events(Request $request)
     {
-        $data = json_decode($request, true);
-        $fromNumber = $data['from_number'];
-
+        $fromNumber = $request['from_number'];
         preg_match('/sip:(\d+)@/', $fromNumber, $matches);
         $phoneNumber = $matches[1] ?? '';
         $phoneNumber = substr($fromNumber, 4, strpos($fromNumber, '@') - 4);
         $cleanPhone = preg_replace('/[^0-9]/', '', $phoneNumber);
+
         $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')
             ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) .'%')
             ->first();
 
-        return response()->json($patient);
+        // Отправляем полные данные пациента через SSE
+        if ($patient) {
+            Http::post('http://83.166.244.225/api/sse/send-full-patient', [
+                'patient_id' => $patient->id
+            ]);
+        } else {
+            Http::post('http://83.166.244.225/api/sse/find-full-patient', [
+                'phone_number' => $cleanPhone
+            ]);
+        }
+
+        return new PatientSummaryResource($patient);
     }
 }

@@ -20,6 +20,7 @@ class PatientSummary extends Model
         'phone_number',
     ];
 
+    /*
     // Геттеры и мутаторы для зашифрованных полей
     public function getSecondNameAttribute($value)
     {
@@ -56,5 +57,5 @@ class PatientSummary extends Model
     {
         $this->attributes['phone_number'] = $value !== null ? Crypt::encryptString($value) : null;
     }
-
+*/
 }
