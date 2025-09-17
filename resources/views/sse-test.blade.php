@@ -348,7 +348,7 @@
     function processPatientData(patientData) {
         if (patientData.message === 'Пациент не найден') {
             displayNoPatient(patientData.searched_phone);
-            addMessage('❌ Пациент не найден для номера: ' + patientData.searched_phone, 'warning');
+            addMessage('❌ Пациент не зарегистрирован в системе. Номер: ' + patientData.searched_phone, 'warning');
         } else {
             displayPatientData(patientData);
             addMessage('✅ Получены данные пациента: ' +
@@ -409,11 +409,8 @@
         container.innerHTML = `
                 <div class="no-patient">
                     <div class="icon">❌</div>
-                    <h3>Пациент не найден</h3>
-                    <p>По номеру: <strong>${phone}</strong></p>
-                    <p style="margin-top: 10px; font-size: 0.9em;">
-                        Проверьте правильность номера телефона
-                    </p>
+                    <h3>Пациент не найден в системе</h3>
+                    <p>Номер: <strong>${phone}</strong></p>
                 </div>
             `;
         updateLastUpdate();
