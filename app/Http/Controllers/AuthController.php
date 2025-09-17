@@ -60,48 +60,83 @@ class AuthController extends Controller
 
     public function call_events(Request $request)
     {
-        //$data = json_decode($request, true);
         $fromNumber = $request['from_number'];
-
         preg_match('/sip:(\d+)@/', $fromNumber, $matches);
         $phoneNumber = $matches[1] ?? '';
         $phoneNumber = substr($fromNumber, 4, strpos($fromNumber, '@') - 4);
         $cleanPhone = preg_replace('/[^0-9]/', '', $phoneNumber);
+
         $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')
             ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) .'%')
             ->first();
 
+        // Подготавливаем данные пациента для отправки
+        $patientData = $patient ? [
+            'id' => $patient->id,
+            'phone_number' => $patient->phone_number,
+            'second_name' => $patient->second_name,
+            'first_name' => $patient->first_name,
+            'patronymic_name' => $patient->patronymic_name,
+            'balance' => $patient->balance,
+            'passport' => $patient->passport,
+            'info' => $patient->info,
+            'created_at' => $patient->created_at,
+            'updated_at' => $patient->updated_at
+        ] : [
+            'message' => 'Пациент не найден',
+            'searched_phone' => $cleanPhone
+        ];
+
         $message = [
             'id' => uniqid(),
-            'type' => 'info',
-            'message' => 'from call_ebents',
+            'type' => 'patient_data', // Меняем тип на patient_data
+            'message' => 'Исходящий вызов',
+            'data' => $patientData,   // Отдельное поле для данных
             'timestamp' => time(),
             'time' => now()->toDateTimeString()
         ];
 
         (new SSEController)->sendEvent2($message);
 
-        return new PatientSummaryResource($patient);
+        return 'ok';
     }
     public function get_number_info(Request $request)
     {
-        //$data = json_decode($request, true);
-        $fromNumber = $request['from_number'];
-        $cleanPhone = preg_replace('/[^0-9]/', '', $fromNumber);
+        $phoneNumber = $request['from_number'];
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phoneNumber);
+
         $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')
             ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) .'%')
             ->first();
 
+        // Подготавливаем данные пациента для отправки
+        $patientData = $patient ? [
+            'id' => $patient->id,
+            'phone_number' => $patient->phone_number,
+            'second_name' => $patient->second_name,
+            'first_name' => $patient->first_name,
+            'patronymic_name' => $patient->patronymic_name,
+            'balance' => $patient->balance,
+            'passport' => $patient->passport,
+            'info' => $patient->info,
+            'created_at' => $patient->created_at,
+            'updated_at' => $patient->updated_at
+        ] : [
+            'message' => 'Пациент не найден',
+            'searched_phone' => $cleanPhone
+        ];
+
         $message = [
             'id' => uniqid(),
-            'type' => 'info',
-            'message' => 'from get_number_info',
+            'type' => 'patient_data', // Меняем тип на patient_data
+            'message' => 'Входящий вызов',
+            'data' => $patientData,   // Отдельное поле для данных
             'timestamp' => time(),
             'time' => now()->toDateTimeString()
         ];
 
         (new SSEController)->sendEvent2($message);
 
-        return new PatientSummaryResource($patient);
+        return 'ok';
     }
 }

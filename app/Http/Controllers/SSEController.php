@@ -98,6 +98,7 @@ class SSEController extends Controller
             'event_id' => $message['id']
         ]);
     }
+
     public function sendEvent2($message)
     {
 
@@ -111,7 +112,6 @@ class SSEController extends Controller
             'event_id' => $message['id']
         ]);
     }
-
     /**
      * Проверяет новые сообщения в файле
      */
