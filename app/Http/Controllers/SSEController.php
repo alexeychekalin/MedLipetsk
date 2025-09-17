@@ -98,6 +98,19 @@ class SSEController extends Controller
             'event_id' => $message['id']
         ]);
     }
+    public function sendEvent2($message)
+    {
+
+        $this->saveMessageToFile($message);
+
+        Log::info('SSE Event saved to file', $message);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Событие сохранено и будет доставлено',
+            'event_id' => $message['id']
+        ]);
+    }
 
     /**
      * Проверяет новые сообщения в файле

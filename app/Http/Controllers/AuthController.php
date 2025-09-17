@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PatientSummaryResource;
 use App\Models\Patients;
 use App\Models\User;
 use App\Models\Users;
@@ -59,8 +60,8 @@ class AuthController extends Controller
 
     public function call_events(Request $request)
     {
-        $data = json_decode($request, true);
-        $fromNumber = $data['from_number'];
+        //$data = json_decode($request, true);
+        $fromNumber = $request['from_number'];
 
         preg_match('/sip:(\d+)@/', $fromNumber, $matches);
         $phoneNumber = $matches[1] ?? '';
@@ -70,6 +71,37 @@ class AuthController extends Controller
             ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) .'%')
             ->first();
 
-        return response()->json($patient);
+        $message = [
+            'id' => uniqid(),
+            'type' => 'info',
+            'message' => 'from call_ebents',
+            'timestamp' => time(),
+            'time' => now()->toDateTimeString()
+        ];
+
+        (new SSEController)->sendEvent2($message);
+
+        return new PatientSummaryResource($patient);
+    }
+    public function get_number_info(Request $request)
+    {
+        //$data = json_decode($request, true);
+        $fromNumber = $request['from_number'];
+        $cleanPhone = preg_replace('/[^0-9]/', '', $fromNumber);
+        $patient = Patients::where('phone_number', 'like', '%' . $cleanPhone . '%')
+            ->orWhere('phone_number', 'like', '%' . substr($cleanPhone, -10) .'%')
+            ->first();
+
+        $message = [
+            'id' => uniqid(),
+            'type' => 'info',
+            'message' => 'from get_number_info',
+            'timestamp' => time(),
+            'time' => now()->toDateTimeString()
+        ];
+
+        (new SSEController)->sendEvent2($message);
+
+        return new PatientSummaryResource($patient);
     }
 }

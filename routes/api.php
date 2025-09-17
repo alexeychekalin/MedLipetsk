@@ -40,6 +40,8 @@ Route::get('/sse/status', [SSEController::class, 'status']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'store']);
 Route::post('/call_events', [AuthController::class, 'call_events']);
+Route::post('/get_number_info', [AuthController::class, 'get_number_info']);
+
 Route::middleware('auth:sanctum')->group(function (){
     Route::get('/user', function (Request $request){
         return $request->user();
